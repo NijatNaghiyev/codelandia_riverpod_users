@@ -3,18 +3,22 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../model/user_model.dart';
 
-final FutureProvider<List<UserModel>> usersData =
-    FutureProvider<List<UserModel>>(
-  (ref) async {
-    final response =
-        await Dio().get('https://jsonplaceholder.typicode.com/users');
+/// Fetch data from API
+Future<List<UserModel>> fetchData() async {
+  final response =
+      await Dio().get('https://jsonplaceholder.typicode.com/users');
+  try {
     if (response.statusCode == 200) {
-      final List<dynamic> users = response.data;
+      final List users = response.data;
       return users.map((json) => UserModel.fromJson(json)).toList();
-    } else {
-      throw Exception('Failed to load users');
     }
-  },
-);
+  } catch (e) {
+    throw Exception('Failed to load users');
+  }
+  return [];
+}
 
-var userList = StateProvider<List<UserModel>>((ref) => []);
+/// StateProvider for users list
+var userList = StateProvider<List<UserModel>>(
+  (ref) => [],
+);

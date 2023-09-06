@@ -13,7 +13,6 @@ class MyApp extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, ref) {
-    final users = ref.watch(usersData);
     final usersList = ref.watch(userList);
     return MaterialApp(
       debugShowCheckedModeBanner: false,
@@ -21,39 +20,28 @@ class MyApp extends ConsumerWidget {
         appBar: AppBar(
           title: const Text('Riverpod Example'),
         ),
-        body: Center(
-          child: usersList.isEmpty
-              ? const CircularProgressIndicator()
-              : RefreshIndicator(
-                  onRefresh: () async => users.when(
-                    data: (data) {
-                      print('Refresh');
-                      return ref
-                          .read(userList.notifier)
-                          .update((state) => state = data);
-                    },
-                    error: (error, stackTrace) => const SizedBox(),
-                    loading: () => const CircularProgressIndicator(),
-                  ),
-                  child: ListView.builder(
-                    physics: const BouncingScrollPhysics(),
-                    itemCount: usersList.length,
-                    itemBuilder: (context, index) => Card(
-                      child: ListTile(
-                        title: Text(usersList[index].name),
-                        subtitle: Text(usersList[index].email),
-                      ),
-                    ),
-                  ),
-                ),
-        ),
+        body: usersList.isEmpty
+            ? const Center(
+                child: CircularProgressIndicator(),
+              )
+            : ListView.builder(
+                physics: const BouncingScrollPhysics(),
+                shrinkWrap: true,
+                itemCount: usersList.length,
+                itemBuilder: (context, index) {
+                  final UserModel user = usersList[index];
+                  return ListTile(
+                    title: Text(user.name),
+                    subtitle: Text(user.email),
+                  );
+                },
+              ),
         floatingActionButton: FloatingActionButton(
           onPressed: () {
-            users.when(
-              data: (data) =>
-                  ref.read(userList.notifier).update((state) => state = data),
-              error: (error, stackTrace) => const SizedBox(),
-              loading: () => const CircularProgressIndicator(),
+            fetchData().then(
+              (value) => ref.read(userList.notifier).update(
+                    (state) => state = value,
+                  ),
             );
           },
           child: const Icon(Icons.data_exploration),
